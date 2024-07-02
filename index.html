@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lung Cancer Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #5c67f2;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #4a54e1;
+        }
+        #result {
+            margin-top: 20px;
+            color: #555;
+            font-size: 24px; /* Larger font size for the result */
+            font-weight: 500; /* Slightly bolder for emphasis */
+        }
+        #images img {
+            width: 300px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+    </style>
+    <script>
+        $(document).ready(function(){
+            $('form').on('submit', function(event){
+                event.preventDefault();  // Prevent the form from submitting via the browser
+                var formData = new FormData(this);
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/predict',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(data){
+                        if(data.cancer_status) {
+                            $('#result').text('Result: ' + data.cancer_status);
+                            if (data.original_img && data.mask_img) {
+                                $('#original_img').attr('src', 'data:image/png;base64,' + data.original_img);
+                                $('#mask_img').attr('src', 'data:image/png;base64,' + data.mask_img);
+                                $('#images').show();
+                            } else {
+                                $('#images').hide();
+                            }
+                        } else {
+                            $('#result').text('Error: Could not process the image.');
+                            $('#images').hide();
+                        }
+                    },
+                    error: function(data){
+                        $('#result').text('Error: Could not connect to the server.');
+                        $('#images').hide();
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Lung Cancer Detection</h1>
+    <form>
+        <input type="file" name="file" required>
+        <button type="submit">Predict Cancer</button>
+    </form>
+    <p id="result"></p> <!-- Element to display the result -->
+    <div id="images" style="display:none;">
+        <img id="original_img" src="" alt="Original Image" />
+        <img id="mask_img" src="" alt="Masked Image" />
+    </div>
+</body>
+</html>
+
